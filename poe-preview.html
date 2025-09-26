@@ -1,0 +1,2551 @@
+<!DOCTYPE html><html lang="fr"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KF Santé - Soins à domicile et téléconsultation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+
+    <style>
+        /* Variables CSS */
+        :root {
+            --primary-blue: #2E86AB;
+            --accent-green: #27AE60;
+            --background: #FFFFFF;
+            --text-dark: #2C3E50;
+            --text-light: #7F8C8D;
+            --border-color: #E0E6ED;
+            --shadow: 0 2px 10px rgba(46, 134, 171, 0.1);
+            --border-radius: 12px;
+        }
+
+        /* Dark mode variables */
+        .dark {
+            --background: #181818;
+            --text-dark: #E0E6ED;
+            --text-light: #A0A0A0;
+            --border-color: #333333;
+        }
+
+        /* Reset et base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--background);
+            color: var(--text-dark);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Layout principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Header */
+        .header {
+            background: var(--primary-blue);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .logo img:hover {
+            transform: rotate(5deg);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+            transform: translateY(0);
+        }
+
+        .btn-primary:hover {
+            background: #2574a3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 134, 171, 0.4);
+        }
+
+        .btn-success {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-outline:hover {
+            background: white;
+            color: var(--primary-blue);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        /* Pages */
+        .page {
+            min-height: calc(100vh - 80px);
+            padding: 2rem 0;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Page d'accueil */
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            margin: -2rem -20px 3rem -20px;
+            animation: slideInLeft 0.8s ease;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--primary-blue);
+            animation: slideInUp 0.6s ease 0.2s both;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+            animation: slideInUp 0.6s ease 0.4s both;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.4s ease;
+            text-align: center;
+            cursor: pointer;
+            animation: scaleIn 0.6s ease forwards;
+        }
+
+        .service-card:nth-child(1) { animation-delay: 0.1s; }
+        .service-card:nth-child(2) { animation-delay: 0.2s; }
+        .service-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .service-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(46, 134, 171, 0.2);
+            border-color: var(--primary-blue);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .service-card:hover .service-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .service-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .service-card p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        /* Formulaires */
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            animation: scaleIn 0.6s ease;
+        }
+
+        .dark .form-container {
+            background: #2C2C2C;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--background);
+            color: var(--text-dark);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1);
+            transform: scale(1.02);
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        /* Liste de services détaillée */
+        .services-section {
+            margin-bottom: 3rem;
+            animation: slideInLeft 0.6s ease;
+        }
+
+        .services-section h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--primary-blue);
+            border-bottom: 3px solid var(--accent-green);
+            padding-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        .service-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .service-item {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            animation: slideInUp 0.6s ease forwards;
+        }
+
+        .dark .service-item {
+            background: #2C2C2C;
+        }
+
+        .service-item:hover {
+            border-color: var(--primary-blue);
+            box-shadow: var(--shadow);
+            transform: translateY(-3px);
+        }
+
+        .service-item h4 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: var(--text-dark);
+        }
+
+        .service-item p {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .service-price {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent-green);
+            margin-bottom: 1rem;
+        }
+
+        /* Wizard de réservation */
+        .booking-wizard {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .wizard-steps {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .wizard-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: #f8f9fa;
+            border-radius: 25px;
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .wizard-step.active {
+            background: var(--primary-blue);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .wizard-step.completed {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .wizard-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            animation: scaleIn 0.6s ease;
+        }
+
+        .dark .wizard-content {
+            background: #2C2C2C;
+        }
+
+        /* Sélection de professionnel */
+        .professional-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .professional-card {
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--background);
+        }
+
+        .professional-card:hover {
+            border-color: var(--primary-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .professional-card.selected {
+            border-color: var(--accent-green);
+            background: rgba(39, 174, 96, 0.05);
+        }
+
+        .professional-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            transition: transform 0.3s ease;
+        }
+
+        .professional-card:hover .professional-photo {
+            transform: scale(1.1);
+        }
+
+        .professional-info h4 {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .professional-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .rating {
+            color: #ffc107;
+        }
+
+        /* Navigation du wizard */
+        .wizard-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Modal de confirmation */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            animation: scaleIn 0.3s ease;
+        }
+
+        .dark .modal-content {
+            background: #2C2C2C;
+        }
+
+        .modal-content h3 {
+            color: var(--accent-green);
+            margin-bottom: 1rem;
+        }
+
+        .modal-content .success-icon {
+            font-size: 3rem;
+            color: var(--accent-green);
+            margin-bottom: 1rem;
+            animation: bounceIn 0.6s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Rendez-vous */
+        .appointment-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+            animation: slideInLeft 0.6s ease;
+        }
+
+        .dark .appointment-card {
+            background: #2C2C2C;
+        }
+
+        .appointment-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(46, 134, 171, 0.15);
+        }
+
+        .appointment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .appointment-status {
+            padding: 0.3rem 1rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-confirmed {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--accent-green);
+        }
+
+        /* Profil professionnel */
+        .profile-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--border-color);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--text-light);
+            transition: transform 0.3s ease;
+        }
+
+        .profile-photo:hover {
+            transform: scale(1.05);
+        }
+
+        /* Notifications */
+        .notification-banner {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-green));
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: slideInDown 0.6s ease;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-banner:hover {
+            background: linear-gradient(135deg, #2574a3, #219a52);
+        }
+
+        .notification-banner.hidden {
+            display: none;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--accent-green);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            z-index: 1001;
+            animation: slideInRight 0.3s ease;
+        }
+
+        .back-button {
+            margin-bottom: 1rem;
+        }
+
+        .section-divider {
+            border-top: 2px solid var(--border-color);
+            margin: 3rem 0;
+            padding-top: 3rem;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #f5f5f5;
+            color: #333333;
+            padding: 3rem 0 1rem;
+            margin-top: 4rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .dark .footer {
+            background-color: #1A1A1A;
+            color: #E0E6ED;
+            border-top-color: #333333;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .footer-section h3 {
+            color: #333333;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .dark .footer-section h3 {
+            color: #E0E6ED;
+        }
+
+        .footer-section p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section ul li a {
+            color: #2E86AB;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section ul li a:hover {
+            color: #27AE60;
+            text-decoration: underline;
+        }
+
+        .footer-logo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .footer-logo img {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            object-fit: contain;
+        }
+
+        .footer-logo span {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2E86AB;
+        }
+
+        .footer-description {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #666;
+        }
+
+        .dark .footer-description {
+            color: #A0A0A0;
+        }
+
+        .footer-heart {
+            color: #27AE60;
+            margin: 0 5px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            color: #2E86AB;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            color: #27AE60;
+            transform: scale(1.2) rotate(5deg);
+        }
+
+        .footer-bottom {
+            background-color: #e8e8e8;
+            padding: 1rem 0;
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .dark .footer-bottom {
+            background-color: #0F0F0F;
+            color: #A0A0A0;
+        }
+
+        .footer-bottom .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .hero {
+                margin: -2rem -15px 2rem -15px;
+                padding: 2rem 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .service-card {
+                padding: 1.5rem;
+            }
+
+            .form-container {
+                margin: 0 15px;
+                padding: 1.5rem;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+
+            .wizard-steps {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .professional-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .wizard-navigation {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+                padding: 0 15px;
+            }
+
+            .footer-logo-section {
+                align-items: center;
+            }
+
+            .footer-bottom .container {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+        }
+
+        /* Animations de chargement */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+<script src="https://puc.poecdn.net/authenticated_preview_page/syncedState.bd4eeeb8e8e02052ee92.js"></script></head>
+<body>
+    <!-- Notification Banner -->
+    <div id="notificationBanner" class="notification-banner hidden">
+        <i class="fas fa-bell"></i>
+        <span>Activez les notifications pour recevoir des rappels de RDV et conseils santé</span>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="https://pfst.cf2.poecdn.net/base/image/f0db5b1367a11fd6081f8ef353d199f7f9798ec3304f586ffa6a3531244b32f1?w=1280&amp;h=853" alt="Logo KF Santé">
+                    <span>KF Santé</span>
+                </div>
+                <nav class="nav-buttons" id="navButtons">
+                    <!-- Navigation dynamique -->
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Page de Connexion -->
+        <div id="loginPage" class="page">
+            <div class="container">
+                <div class="form-container">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <div class="logo">
+                            <img src="https://pfst.cf2.poecdn.net/base/image/f0db5b1367a11fd6081f8ef353d199f7f9798ec3304f586ffa6a3531244b32f1?w=1280&amp;h=853" alt="Logo KF Santé" style="width: 60px; height: 60px;">
+                            <h2 style="color: var(--primary-blue);">Connexion</h2>
+                        </div>
+                    </div>
+                    
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginEmail">Email ou Téléphone</label>
+                            <input type="text" id="loginEmail" class="form-control" required="" placeholder="patient@test.com" aria-label="Email ou téléphone">
+                        </div>
+                        
+                        <div id="otpSection" class="form-group hidden">
+                            <label for="otpCode">Code OTP</label>
+                            <input type="text" id="otpCode" class="form-control" placeholder="Entrez le code 123456" aria-label="Code OTP">
+                            <small style="color: var(--text-light);">Code de démonstration: 123456</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span id="loginButtonText">Demander le code OTP</span>
+                        </button>
+                    </form>
+                    
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <p>Pas encore de compte ? 
+                            <a href="#" onclick="showSignup()" style="color: var(--primary-blue); text-decoration: none;">
+                                S'inscrire
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page d'Inscription -->
+        <div id="signupPage" class="page hidden">
+            <div class="container">
+                <div class="form-container">
+                    <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary-blue);">Inscription</h2>
+                    
+                    <form id="signupForm">
+                        <div class="form-group">
+                            <label for="signupName">Nom complet</label>
+                            <input type="text" id="signupName" class="form-control" required="" aria-label="Nom complet">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="signupEmail">Email</label>
+                            <input type="email" id="signupEmail" class="form-control" required="" aria-label="Adresse email">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="signupPhone">Téléphone</label>
+                            <input type="tel" id="signupPhone" class="form-control" required="" aria-label="Numéro de téléphone">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="signupPassword">Mot de passe</label>
+                            <input type="password" id="signupPassword" class="form-control" required="" aria-label="Mot de passe">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="userRole">Type de compte</label>
+                            <select id="userRole" class="form-control form-select" required="" aria-label="Type de compte">
+                                <option value="">Sélectionnez votre rôle</option>
+                                <option value="patient">Patient</option>
+                                <option value="professional">Professionnel de santé</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-user-plus"></i>
+                            S'inscrire
+                        </button>
+                    </form>
+                    
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <p>Déjà un compte ? 
+                            <a href="#" onclick="showLogin()" style="color: var(--primary-blue); text-decoration: none;">
+                                Se connecter
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page d'Accueil -->
+        <div id="homePage" class="page hidden">
+            <div class="hero">
+                <div class="container">
+                    <h1>Soins de santé à domicile</h1>
+                    <p>Accédez à des soins de qualité depuis chez vous avec KF Santé. 
+                       Consultations virtuelles, soins infirmiers et accompagnement personnalisé.</p>
+                </div>
+            </div>
+            
+            <div class="container">
+                <div class="services-grid">
+                    <div class="service-card" onclick="showCliniqueVirtuelle()">
+                        <div class="service-icon">
+                            <i class="fas fa-video"></i>
+                        </div>
+                        <h3>Clinique Virtuelle</h3>
+                        <p>Consultations en ligne avec nos médecins spécialistes. 
+                           Médecin généraliste, spécialistes, psychologues et orthophonistes disponibles.</p>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i>
+                            Consulter
+                        </button>
+                    </div>
+                    
+                    <div class="service-card" onclick="showSalamatek()">
+                        <div class="service-icon">
+                            <i class="fas fa-heart"></i>
+                        </div>
+                        <h3>Programme Salamatek</h3>
+                        <p>Accompagnement postnatal complet. Suivi médical, soutien psychologique, 
+                           accompagnement allaitement et soins infirmiers à domicile.</p>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i>
+                            Découvrir
+                        </button>
+                    </div>
+                    
+                    <div class="service-card" onclick="showSoinChezVous()">
+                        <div class="service-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <h3>Soin Chez Vous</h3>
+                        <p>Soins infirmiers et médicaux à domicile. Prélèvements, injections, 
+                           pansements, ECG et accompagnement personnalisé.</p>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-arrow-right"></i>
+                            Réserver
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Soin Chez Vous -->
+        <div id="soinChezVousPage" class="page hidden">
+            <div class="container">
+                <button class="btn btn-secondary back-button" onclick="showHome()">
+                    <i class="fas fa-arrow-left"></i>
+                    Retour à l'accueil
+                </button>
+                
+                <h1 style="text-align: center; color: var(--primary-blue); margin-bottom: 3rem;">
+                    Soin Chez Vous
+                </h1>
+                
+                <!-- Section A: Examens médicaux -->
+                <div class="services-section">
+                    <h2><i class="fas fa-stethoscope"></i> Examens médicaux à domicile</h2>
+                    <div class="service-list">
+                        <div class="service-item">
+                            <h4>Médecin généraliste</h4>
+                            <p>Consultation médicale générale à domicile</p>
+                            <div class="service-price">1500 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('consultation-generaliste', 'Consultation médecin généraliste', 1500)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Cardiologie (consultation)</h4>
+                            <p>Consultation spécialisée en cardiologie</p>
+                            <div class="service-price">2000 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('consultation-cardio', 'Consultation cardiologie', 2000)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Pneumologie</h4>
+                            <p>Consultation spécialisée en pneumologie</p>
+                            <div class="service-price">1800 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('consultation-pneumo', 'Consultation pneumologie', 1800)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Dermatologie</h4>
+                            <p>Consultation spécialisée en dermatologie</p>
+                            <div class="service-price">1700 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('consultation-dermato', 'Consultation dermatologie', 1700)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Pédiatrie</h4>
+                            <p>Consultation pédiatrique à domicile</p>
+                            <div class="service-price">1600 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('consultation-pediatre', 'Consultation pédiatrie', 1600)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Gynécologie</h4>
+                            <p>Consultation gynécologique à domicile</p>
+                            <div class="service-price">1900 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('consultation-gyneco', 'Consultation gynécologie', 1900)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Psychologie</h4>
+                            <p>Séance de consultation psychologique</p>
+                            <div class="service-price">1400 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('consultation-psycho', 'Consultation psychologie', 1400)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Orthophonie</h4>
+                            <p>Séance d'orthophonie à domicile</p>
+                            <div class="service-price">1300 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('consultation-ortho', 'Consultation orthophonie', 1300)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Médecine alternative</h4>
+                            <p>Consultation en médecine alternative</p>
+                            <div class="service-price">1200 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('consultation-alternative', 'Consultation médecine alternative', 1200)">
+                                Réserver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- Section B: Soins infirmiers -->
+                <div class="services-section">
+                    <h2><i class="fas fa-user-nurse"></i> Soins infirmiers à domicile</h2>
+                    <div class="service-list">
+                        <div class="service-item">
+                            <h4>Prélèvement sanguin et urinaire</h4>
+                            <p>Prélèvement avec ou sans transport au laboratoire</p>
+                            <div class="service-price">800 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('prelevement', 'Prélèvement sanguin et urinaire', 800)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Injections</h4>
+                            <p>Injections intramusculaire, intraveineuse, sous-cutanée</p>
+                            <div class="service-price">600 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('injections', 'Injections médicales', 600)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>ECG à domicile</h4>
+                            <p>Électrocardiogramme sans interprétation</p>
+                            <div class="service-price">700 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('ecg', 'ECG à domicile', 700)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Ablation des fils post-opératoires</h4>
+                            <p>Retrait sécurisé des fils de suture post-opératoires</p>
+                            <div class="service-price">1000 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('ablation-fils', 'Ablation des fils post-opératoires', 1000)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Pansements et changements</h4>
+                            <p>Soins de plaies et changement de pansements</p>
+                            <div class="service-price">500 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('pansements', 'Pansements et changements', 500)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Nettoyage des brûlures cutanées</h4>
+                            <p>Soins spécialisés des brûlures</p>
+                            <div class="service-price">700 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('brulures', 'Nettoyage des brûlures cutanées', 700)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Traitement des escarres</h4>
+                            <p>Nettoyage et traitement des ulcères de décubitus</p>
+                            <div class="service-price">900 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('escarres', 'Traitement des escarres', 900)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Accompagnement continu à domicile</h4>
+                            <p>Accompagnement infirmier continu au domicile du patient</p>
+                            <div class="service-price">1200 DA / journée</div>
+                            <button class="btn btn-primary" onclick="startBooking('accompagnement-domicile', 'Accompagnement continu à domicile', 1200)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Accompagnement en milieu hospitalier</h4>
+                            <p>Accompagnement infirmier continu à l'hôpital</p>
+                            <div class="service-price">1200 DA / journée</div>
+                            <button class="btn btn-primary" onclick="startBooking('accompagnement-hopital', 'Accompagnement en milieu hospitalier', 1200)">
+                                Réserver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <!-- Section C: Rééducation -->
+                <div class="services-section">
+                    <h2><i class="fas fa-dumbbell"></i> Rééducation &amp; Hospitalisation à domicile</h2>
+                    <div class="service-list">
+                        <div class="service-item">
+                            <h4>Séances de rééducation fonctionnelle</h4>
+                            <p>Kinésithérapie et rééducation à domicile</p>
+                            <div class="service-price">1100 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('reeducation', 'Rééducation fonctionnelle', 1100)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Hospitalisation à domicile</h4>
+                            <p>Installation et suivi avec lit médicalisé</p>
+                            <div class="service-price">2500 DA / journée</div>
+                            <button class="btn btn-primary" onclick="startBooking('hospitalisation-domicile', 'Hospitalisation à domicile', 2500)">
+                                Réserver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Clinique Virtuelle -->
+        <div id="cliniqueVirtuellePage" class="page hidden">
+            <div class="container">
+                <button class="btn btn-secondary back-button" onclick="showHome()">
+                    <i class="fas fa-arrow-left"></i>
+                    Retour à l'accueil
+                </button>
+                
+                <h1 style="text-align: center; color: var(--primary-blue); margin-bottom: 3rem;">
+                    Clinique Virtuelle
+                </h1>
+                
+                <div class="service-list">
+                    <div class="service-item">
+                        <h4>Dr. Sarah Benali - Médecin généraliste</h4>
+                        <p>15 ans d'expérience • Consultations générales et urgences</p>
+                        <div class="service-price">1500 DA</div>
+                        <button class="btn btn-primary" onclick="startBooking('teleconsult-generaliste', 'Téléconsultation - Médecin généraliste', 1500)">
+                            Prendre RDV
+                        </button>
+                    </div>
+                    <div class="service-item">
+                        <h4>Dr. Ahmed Brahim - Cardiologue</h4>
+                        <p>20 ans d'expérience • Spécialiste des pathologies cardiaques</p>
+                        <div class="service-price">2000 DA</div>
+                        <button class="btn btn-primary" onclick="startBooking('teleconsult-cardio', 'Téléconsultation - Cardiologie', 2000)">
+                            Prendre RDV
+                        </button>
+                    </div>
+                    <div class="service-item">
+                        <h4>Dr. Leila Mansouri - Psychologue</h4>
+                        <p>12 ans d'expérience • Thérapie comportementale et cognitive</p>
+                        <div class="service-price">1400 DA</div>
+                        <button class="btn btn-primary" onclick="startBooking('teleconsult-psycho', 'Téléconsultation - Psychologie', 1400)">
+                            Prendre RDV
+                        </button>
+                    </div>
+                    <div class="service-item">
+                        <h4>Mme. Fatima Kadi - Orthophoniste</h4>
+                        <p>10 ans d'expérience • Troubles de la parole et du langage</p>
+                        <div class="service-price">1300 DA</div>
+                        <button class="btn btn-primary" onclick="startBooking('teleconsult-ortho', 'Téléconsultation - Orthophonie', 1300)">
+                            Prendre RDV
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Programme Salamatek -->
+        <div id="salamatekPage" class="page hidden">
+            <div class="container">
+                <button class="btn btn-secondary back-button" onclick="showHome()">
+                    <i class="fas fa-arrow-left"></i>
+                    Retour à l'accueil
+                </button>
+                
+                <h1 style="text-align: center; color: var(--primary-blue); margin-bottom: 3rem;">
+                    Programme Salamatek
+                </h1>
+                
+                <div class="services-section">
+                    <h2><i class="fas fa-baby"></i> Services d'accompagnement postnatal</h2>
+                    <div class="service-list">
+                        <div class="service-item">
+                            <h4>Suivi postnatal</h4>
+                            <p>Suivi médical complet post-accouchement</p>
+                            <div class="service-price">1800 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('suivi-postnatal', 'Suivi postnatal', 1800)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Soutien psychologique</h4>
+                            <p>Accompagnement psychologique post-partum</p>
+                            <div class="service-price">1500 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('soutien-psycho', 'Soutien psychologique', 1500)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Accompagnement allaitement</h4>
+                            <p>Conseils et soutien pour l'allaitement maternel</p>
+                            <div class="service-price">1200 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('allaitement', 'Accompagnement allaitement', 1200)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Soins infirmiers à domicile</h4>
+                            <p>Soins spécialisés post-accouchement</p>
+                            <div class="service-price">1000 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('soins-infirmiers', 'Soins infirmiers à domicile', 1000)">
+                                Réserver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+                <div class="services-section">
+                    <h2><i class="fas fa-gift"></i> Packs Salamatek</h2>
+                    <div class="service-list">
+                        <div class="service-item">
+                            <h4>Pack Salamatek - 5 jours</h4>
+                            <p>Suivi complet pendant 5 jours post-accouchement</p>
+                            <div class="service-price">4500 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('pack-5j', 'Pack Salamatek 5 jours', 4500)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Pack Salamatek - 7 jours</h4>
+                            <p>Suivi complet pendant 7 jours post-accouchement</p>
+                            <div class="service-price">6000 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('pack-7j', 'Pack Salamatek 7 jours', 6000)">
+                                Réserver
+                            </button>
+                        </div>
+                        <div class="service-item">
+                            <h4>Pack Salamatek - 10 jours</h4>
+                            <p>Suivi complet pendant 10 jours post-accouchement</p>
+                            <div class="service-price">8000 DA</div>
+                            <button class="btn btn-primary" onclick="startBooking('pack-10j', 'Pack Salamatek 10 jours', 8000)">
+                                Réserver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Wizard de Réservation -->
+        <div id="bookingPage" class="page hidden">
+            <div class="container">
+                <button class="btn btn-secondary back-button" onclick="goBackFromBooking()">
+                    <i class="fas fa-arrow-left"></i>
+                    Retour
+                </button>
+                
+                <div class="booking-wizard">
+                    <div class="wizard-steps">
+                        <div class="wizard-step active" data-step="1">
+                            <i class="fas fa-info-circle"></i>
+                            Informations
+                        </div>
+                        <div class="wizard-step" data-step="2">
+                            <i class="fas fa-user-nurse"></i>
+                            Professionnel
+                        </div>
+                        <div class="wizard-step" data-step="3">
+                            <i class="fas fa-check"></i>
+                            Confirmation
+                        </div>
+                    </div>
+                    
+                    <div class="wizard-content">
+                        <!-- Étape 1: Informations -->
+                        <div id="bookingStep1" class="booking-step">
+                            <h3 id="serviceTitle" style="margin-bottom: 2rem; color: var(--primary-blue);"></h3>
+                            
+                            <form id="bookingForm">
+                                <div class="form-group">
+                                    <label for="patientName">Nom et prénom</label>
+                                    <input type="text" id="patientName" class="form-control" required="" aria-label="Nom et prénom du patient">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="patientPhone">Téléphone</label>
+                                    <input type="tel" id="patientPhone" class="form-control" required="" aria-label="Numéro de téléphone">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="appointmentDate">Date et heure</label>
+                                    <input type="datetime-local" id="appointmentDate" class="form-control" required="" aria-label="Date et heure du rendez-vous">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="patientAddress">Adresse</label>
+                                    <textarea id="patientAddress" class="form-control" rows="3" required="" placeholder="Quartier M'naouer, Alger" aria-label="Adresse du patient"></textarea>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Étape 2: Sélection professionnel -->
+                        <div id="bookingStep2" class="booking-step hidden">
+                            <h3 style="margin-bottom: 2rem; color: var(--primary-blue);">
+                                Choisissez votre professionnel
+                            </h3>
+                            
+                            <div class="professional-list" id="professionalList">
+                                <!-- Professionnels seront ajoutés dynamiquement -->
+                            </div>
+                        </div>
+                        
+                        <!-- Étape 3: Confirmation -->
+                        <div id="bookingStep3" class="booking-step hidden">
+                            <h3 style="margin-bottom: 2rem; color: var(--primary-blue);">
+                                Confirmation de réservation
+                            </h3>
+                            
+                            <div id="bookingSummary">
+                                <!-- Résumé sera généré dynamiquement -->
+                            </div>
+                        </div>
+                        
+                        <div class="wizard-navigation">
+                            <button id="prevButton" class="btn btn-secondary hidden" onclick="prevBookingStep()">
+                                <i class="fas fa-arrow-left"></i>
+                                Précédent
+                            </button>
+                            
+                            <div></div>
+                            
+                            <button id="nextButton" class="btn btn-primary" onclick="nextBookingStep()">
+                                Suivant
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Mes Rendez-vous -->
+        <div id="appointmentsPage" class="page hidden">
+            <div class="container">
+                <button class="btn btn-secondary back-button" onclick="showHome()">
+                    <i class="fas fa-arrow-left"></i>
+                    Retour à l'accueil
+                </button>
+                
+                <h1 style="color: var(--primary-blue); margin-bottom: 2rem;">Mes Rendez-vous</h1>
+                
+                <div id="appointmentsList">
+                    <!-- Rendez-vous seront listés ici -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Profil Professionnel -->
+        <div id="profilePage" class="page hidden">
+            <div class="container">
+                <button class="btn btn-secondary back-button" onclick="showHome()">
+                    <i class="fas fa-arrow-left"></i>
+                    Retour à l'accueil
+                </button>
+                
+                <div class="form-container">
+                    <div class="profile-header">
+                        <div class="profile-photo">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h2 style="color: var(--primary-blue);">Mon Profil Professionnel</h2>
+                    </div>
+                    
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label for="profileName">Nom complet</label>
+                            <input type="text" id="profileName" class="form-control" required="" aria-label="Nom complet">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profileSpecialty">Spécialité</label>
+                            <input type="text" id="profileSpecialty" class="form-control" required="" aria-label="Spécialité">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profileQualifications">Qualifications</label>
+                            <textarea id="profileQualifications" class="form-control" rows="3" aria-label="Qualifications"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profileExperience">Années d'expérience</label>
+                            <input type="number" id="profileExperience" class="form-control" aria-label="Années d'expérience">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profileAvailability">Disponibilité (jours/heures)</label>
+                            <textarea id="profileAvailability" class="form-control" rows="3" placeholder="Ex: Lundi-Vendredi 8h-17h" aria-label="Disponibilité"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="profilePhone">Téléphone de contact</label>
+                            <input type="tel" id="profilePhone" class="form-control" aria-label="Téléphone de contact">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success" style="width: 100%;">
+                            <i class="fas fa-save"></i>
+                            Enregistrer les modifications
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de confirmation -->
+    <div id="confirmationModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3>Réservation confirmée !</h3>
+            <div id="confirmationMessage"></div>
+            <p style="color: var(--text-light); margin-top: 1rem;">
+                <strong>Prochaines étapes :</strong><br>
+                Vous recevrez un SMS de confirmation. L'infirmier vous contactera avant la visite.
+            </p>
+            <button class="btn btn-primary" onclick="closeConfirmationModal()">
+                Fermer
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let currentBooking = {};
+        let currentStep = 1;
+        let otpRequested = false;
+        let selectedProfessional = null;
+        let messaging = null;
+        
+        // Données de démonstration
+        const demoUsers = {
+            'patient@test.com': {
+                email: 'patient@test.com',
+                name: 'Marie Dubois',
+                role: 'patient',
+                phone: '+213 555 123 456'
+            },
+            'nurse1@test.com': {
+                email: 'nurse1@test.com',
+                name: 'Amina Khelifi',
+                role: 'professional',
+                phone: '+213 555 789 123',
+                specialty: 'Infirmière diplômée',
+                experience: 8,
+                qualifications: 'Diplôme d\'État infirmier, Formation soins à domicile',
+                availability: 'Lundi-Samedi 7h-19h'
+            }
+        };
+        
+        const demoProfessionals = [
+            {
+                id: 'nurse1',
+                name: 'Amina Khelifi',
+                photo: '<i class="fas fa-user-nurse"></i>',
+                qualification: 'Infirmière diplômée d\'État',
+                experience: 8,
+                rating: 4.8,
+                nextSlot: 'Demain 14h00',
+                phone: '+213 555 789 123'
+            },
+            {
+                id: 'nurse2',
+                name: 'Youcef Benaissa',
+                photo: '<i class="fas fa-user-md"></i>',
+                qualification: 'Infirmier spécialisé',
+                experience: 12,
+                rating: 4.9,
+                nextSlot: 'Après-demain 10h00',
+                phone: '+213 555 456 789'
+            }
+        ];
+
+        // Configuration Firebase
+        const firebaseConfig = {
+            apiKey: "demo-api-key",
+            authDomain: "kf-sante-demo.firebaseapp.com",
+            projectId: "kf-sante-demo",
+            storageBucket: "kf-sante-demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "demo-app-id"
+        };
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            initializeFirebase();
+            
+            // Configuration du dark mode
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            });
+        });
+
+        function initializeApp() {
+            // Vérifier si l'utilisateur est connecté
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                showHome();
+            } else {
+                showLogin();
+            }
+            
+            // Événements des formulaires
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // Formulaire de connexion
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            
+            // Formulaire d'inscription
+            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+            
+            // Formulaire de profil
+            document.getElementById('profileForm').addEventListener('submit', handleProfileUpdate);
+            
+            // Préfillir la date avec un exemple
+            const dateInput = document.getElementById('appointmentDate');
+            if (dateInput) {
+                const now = new Date();
+                now.setDate(now.getDate() + 2); // Après-demain
+                now.setHours(11, 0, 0, 0); // 11h00
+                dateInput.value = now.toISOString().slice(0, 16);
+            }
+        }
+
+        // Configuration Firebase et notifications push
+        function initializeFirebase() {
+            try {
+                // Initialiser Firebase (en mode démo)
+                console.log('Firebase initialisé en mode démo');
+                
+                // Vérifier le support des notifications
+                if ('Notification' in window && 'serviceWorker' in navigator) {
+                    checkNotificationPermission();
+                }
+            } catch (error) {
+                console.log('Firebase en mode démo - pas de configuration réelle');
+            }
+        }
+
+        function checkNotificationPermission() {
+            const permission = Notification.permission;
+            
+            if (permission === 'default') {
+                showNotificationBanner();
+            } else if (permission === 'granted') {
+                console.log('Notifications autorisées');
+                scheduleTestNotifications();
+            } else {
+                console.log('Notifications refusées');
+            }
+        }
+
+        function showNotificationBanner() {
+            const banner = document.getElementById('notificationBanner');
+            banner.classList.remove('hidden');
+            
+            banner.addEventListener('click', requestNotificationPermission);
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(function(permission) {
+                    const banner = document.getElementById('notificationBanner');
+                    banner.classList.add('hidden');
+                    
+                    if (permission === 'granted') {
+                        showToast('✅ Notifications activées! Vous recevrez des rappels de RDV');
+                        scheduleTestNotifications();
+                    } else {
+                        showToast('❌ Notifications désactivées');
+                    }
+                });
+            }
+        }
+
+        function scheduleTestNotifications() {
+            // Simuler des notifications de démonstration
+            setTimeout(() => {
+                if (Notification.permission === 'granted') {
+                    new Notification('🏥 KF Santé - Rappel', {
+                        body: 'Votre rendez-vous avec Dr. Sarah Benali est dans 24h',
+                        icon: 'https://pfst.cf2.poecdn.net/base/image/f0db5b1367a11fd6081f8ef353d199f7f9798ec3304f586ffa6a3531244b32f1?w=128&h=128',
+                        badge: 'https://pfst.cf2.poecdn.net/base/image/f0db5b1367a11fd6081f8ef353d199f7f9798ec3304f586ffa6a3531244b32f1?w=64&h=64'
+                    });
+                }
+            }, 5000); // Test après 5 secondes
+
+            // Notification conseils santé
+            setTimeout(() => {
+                if (Notification.permission === 'granted') {
+                    new Notification('💡 KF Santé - Conseil santé', {
+                        body: 'Pensez à boire au moins 8 verres d\'eau par jour pour rester hydraté',
+                        icon: 'https://pfst.cf2.poecdn.net/base/image/f0db5b1367a11fd6081f8ef353d199f7f9798ec3304f586ffa6a3531244b32f1?w=128&h=128'
+                    });
+                }
+            }, 15000); // Test après 15 secondes
+        }
+
+        function sendNotification(title, body, data = {}) {
+            if (Notification.permission === 'granted') {
+                const notification = new Notification(title, {
+                    body: body,
+                    icon: 'https://pfst.cf2.poecdn.net/base/image/f0db5b1367a11fd6081f8ef353d199f7f9798ec3304f586ffa6a3531244b32f1?w=128&h=128',
+                    badge: 'https://pfst.cf2.poecdn.net/base/image/f0db5b1367a11fd6081f8ef353d199f7f9798ec3304f586ffa6a3531244b32f1?w=64&h=64',
+                    data: data,
+                    requireInteraction: true
+                });
+
+                notification.onclick = function() {
+                    window.focus();
+                    notification.close();
+                    
+                    // Actions basées sur le type de notification
+                    if (data.type === 'appointment') {
+                        showAppointments();
+                    } else if (data.type === 'booking_confirmed') {
+                        showAppointments();
+                    }
+                };
+            }
+        }
+
+        // Gestion de la navigation
+        function updateNavigation() {
+            const navButtons = document.getElementById('navButtons');
+            
+            if (!currentUser) {
+                navButtons.innerHTML = `
+                    <button class="btn btn-outline" onclick="showLogin()">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Connexion
+                    </button>
+                `;
+                return;
+            }
+            
+            let profileButton = '';
+            if (currentUser.role === 'professional') {
+                profileButton = `
+                    <button class="btn btn-outline" onclick="showProfile()">
+                        <i class="fas fa-user"></i>
+                        Profil
+                    </button>
+                `;
+            }
+            
+            navButtons.innerHTML = `
+                <button class="btn btn-outline" onclick="showAppointments()">
+                    <i class="fas fa-calendar-alt"></i>
+                    Mes RDV
+                </button>
+                ${profileButton}
+                <button class="btn btn-outline" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Déconnexion
+                </button>
+            `;
+        }
+
+        // Pages avec animations
+        function showPage(pageId) {
+            // Cacher toutes les pages avec fade out
+            document.querySelectorAll('.page').forEach(page => {
+                if (!page.classList.contains('hidden')) {
+                    page.style.animation = 'fadeOut 0.3s ease forwards';
+                    setTimeout(() => {
+                        page.classList.add('hidden');
+                        page.style.animation = '';
+                    }, 300);
+                }
+            });
+            
+            // Afficher la page demandée avec fade in
+            setTimeout(() => {
+                const targetPage = document.getElementById(pageId);
+                targetPage.classList.remove('hidden');
+                targetPage.style.animation = 'fadeInUp 0.6s ease forwards';
+                
+                // Mise à jour de la navigation
+                updateNavigation();
+                
+                // Défilement vers le haut
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 300);
+        }
+
+        function showLogin() {
+            showPage('loginPage');
+            setTimeout(() => {
+                document.getElementById('loginEmail').focus();
+            }, 600);
+        }
+
+        function showSignup() {
+            showPage('signupPage');
+            setTimeout(() => {
+                document.getElementById('signupName').focus();
+            }, 600);
+        }
+
+        function showHome() {
+            if (!currentUser) {
+                showLogin();
+                return;
+            }
+            showPage('homePage');
+        }
+
+        function showSoinChezVous() {
+            showPage('soinChezVousPage');
+        }
+
+        function showCliniqueVirtuelle() {
+            showPage('cliniqueVirtuellePage');
+        }
+
+        function showSalamatek() {
+            showPage('salamatekPage');
+        }
+
+        function showAppointments() {
+            showPage('appointmentsPage');
+            setTimeout(() => {
+                loadAppointments();
+            }, 300);
+        }
+
+        function showProfile() {
+            if (currentUser.role !== 'professional') return;
+            showPage('profilePage');
+            setTimeout(() => {
+                loadProfileData();
+            }, 300);
+        }
+
+        // CSS pour fadeOut
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Authentification
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value.toLowerCase();
+            const otp = document.getElementById('otpCode').value;
+            
+            if (!otpRequested) {
+                // Première étape: demander l'OTP
+                document.getElementById('otpSection').classList.remove('hidden');
+                document.getElementById('loginButtonText').textContent = 'Se connecter';
+                otpRequested = true;
+                showToast('Code OTP envoyé (démonstration: 123456)');
+                return;
+            }
+            
+            // Deuxième étape: vérifier l'OTP
+            if (otp !== '123456') {
+                showCustomAlert('Code OTP incorrect. Utilisez: 123456');
+                return;
+            }
+            
+            // Vérifier si l'utilisateur existe
+            const user = demoUsers[email];
+            if (!user) {
+                showCustomAlert('Utilisateur non trouvé. Utilisez: patient@test.com ou nurse1@test.com');
+                return;
+            }
+            
+            // Connexion réussie
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showToast(`Bienvenue, ${currentUser.name}!`);
+            
+            // Envoyer notification de connexion
+            sendNotification('🔐 Connexion réussie', `Bienvenue sur KF Santé, ${currentUser.name}!`);
+            
+            showHome();
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const userData = {
+                name: document.getElementById('signupName').value,
+                email: document.getElementById('signupEmail').value.toLowerCase(),
+                phone: document.getElementById('signupPhone').value,
+                password: document.getElementById('signupPassword').value,
+                role: document.getElementById('userRole').value
+            };
+            
+            // Validation simple
+            if (!userData.name || !userData.email || !userData.phone || !userData.password || !userData.role) {
+                showCustomAlert('Veuillez remplir tous les champs');
+                return;
+            }
+            
+            // Simuler la création du compte
+            currentUser = userData;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showToast(`Compte créé avec succès! Bienvenue, ${currentUser.name}!`);
+            
+            // Envoyer notification de bienvenue
+            sendNotification('🎉 Bienvenue sur KF Santé!', `Votre compte a été créé avec succès, ${currentUser.name}`);
+            
+            showHome();
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showToast('Déconnecté avec succès');
+            showLogin();
+        }
+
+        // Gestion de la réservation
+        function startBooking(serviceId, serviceName, servicePrice) {
+            if (!currentUser) {
+                showCustomAlert('Veuillez vous connecter pour réserver un service');
+                showLogin();
+                return;
+            }
+            
+            currentBooking = {
+                serviceId,
+                serviceName,
+                servicePrice,
+                step: 1
+            };
+            
+            // Pré-remplir avec les données utilisateur
+            document.getElementById('patientName').value = currentUser.name || '';
+            document.getElementById('patientPhone').value = currentUser.phone || '';
+            
+            document.getElementById('serviceTitle').textContent = serviceName;
+            currentStep = 1;
+            updateWizardStep();
+            showPage('bookingPage');
+        }
+
+        function nextBookingStep() {
+            if (currentStep === 1) {
+                // Valider le formulaire étape 1
+                const form = document.getElementById('bookingForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                // Sauvegarder les données
+                currentBooking.patientName = document.getElementById('patientName').value;
+                currentBooking.patientPhone = document.getElementById('patientPhone').value;
+                currentBooking.appointmentDate = document.getElementById('appointmentDate').value;
+                currentBooking.patientAddress = document.getElementById('patientAddress').value;
+                
+                currentStep = 2;
+                loadProfessionals();
+            } else if (currentStep === 2) {
+                // Vérifier qu'un professionnel est sélectionné
+                if (!selectedProfessional) {
+                    showCustomAlert('Veuillez sélectionner un professionnel');
+                    return;
+                }
+                
+                currentBooking.professional = selectedProfessional;
+                currentStep = 3;
+                generateBookingSummary();
+            } else if (currentStep === 3) {
+                // Confirmer la réservation
+                confirmBooking();
+                return;
+            }
+            
+            updateWizardStep();
+        }
+
+        function prevBookingStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizardStep();
+            }
+        }
+
+        function updateWizardStep() {
+            // Mettre à jour les indicateurs d'étapes
+            document.querySelectorAll('.wizard-step').forEach((step, index) => {
+                const stepNumber = index + 1;
+                step.classList.remove('active', 'completed');
+                
+                if (stepNumber < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNumber === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+            
+            // Afficher/cacher les étapes
+            document.querySelectorAll('.booking-step').forEach((step, index) => {
+                const stepNumber = index + 1;
+                if (stepNumber === currentStep) {
+                    step.classList.remove('hidden');
+                } else {
+                    step.classList.add('hidden');
+                }
+            });
+            
+            // Mettre à jour les boutons
+            const prevButton = document.getElementById('prevButton');
+            const nextButton = document.getElementById('nextButton');
+            
+            if (currentStep === 1) {
+                prevButton.classList.add('hidden');
+            } else {
+                prevButton.classList.remove('hidden');
+            }
+            
+            if (currentStep === 3) {
+                nextButton.innerHTML = '<i class="fas fa-check"></i> Confirmer la réservation';
+                nextButton.className = 'btn btn-success';
+            } else {
+                nextButton.innerHTML = 'Suivant <i class="fas fa-arrow-right"></i>';
+                nextButton.className = 'btn btn-primary';
+            }
+        }
+
+        function loadProfessionals() {
+            const container = document.getElementById('professionalList');
+            container.innerHTML = demoProfessionals.map(prof => `
+                <div class="professional-card" onclick="selectProfessional('${prof.id}')">
+                    <input type="radio" name="professional" value="${prof.id}" style="margin-right: 1rem;">
+                    <div class="professional-photo">${prof.photo}</div>
+                    <div class="professional-info" style="flex: 1;">
+                        <h4>${prof.name}</h4>
+                        <p>${prof.qualification}</p>
+                        <p><strong>${prof.experience} ans d'expérience</strong></p>
+                        <p class="rating">
+                            ${'★'.repeat(Math.floor(prof.rating))} ${prof.rating}/5
+                        </p>
+                        <p><strong>Prochain créneau:</strong> ${prof.nextSlot}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectProfessional(professionalId) {
+            // Supprimer la sélection précédente
+            document.querySelectorAll('.professional-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Sélectionner le nouveau professionnel
+            event.currentTarget.classList.add('selected');
+            const radio = event.currentTarget.querySelector('input[type="radio"]');
+            radio.checked = true;
+            
+            selectedProfessional = demoProfessionals.find(p => p.id === professionalId);
+        }
+
+        function generateBookingSummary() {
+            const appointmentDate = new Date(currentBooking.appointmentDate);
+            const formattedDate = appointmentDate.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+            const formattedTime = appointmentDate.toLocaleTimeString('fr-FR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            document.getElementById('bookingSummary').innerHTML = `
+                <div style="background: #f8f9fa; padding: 2rem; border-radius: var(--border-radius); border: 1px solid var(--border-color);">
+                    <h4 style="color: var(--primary-blue); margin-bottom: 1.5rem;">
+                        <i class="fas fa-clipboard-list"></i>
+                        Détails de la réservation
+                    </h4>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Service:</strong> ${currentBooking.serviceName}
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Patient:</strong> ${currentBooking.patientName}
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Téléphone:</strong> ${currentBooking.patientPhone}
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Date et heure:</strong> ${formattedDate} à ${formattedTime}
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Adresse:</strong> ${currentBooking.patientAddress}
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Professionnel:</strong> ${selectedProfessional.name}
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <strong>Téléphone professionnel:</strong> ${selectedProfessional.phone}
+                    </div>
+                    
+                    <hr style="margin: 1.5rem 0; border: 1px solid var(--border-color);">
+                    
+                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--accent-green);">
+                        <strong>Prix total: ${currentBooking.servicePrice} DA</strong>
+                    </div>
+                </div>
+            `;
+        }
+
+        function confirmBooking() {
+            // Générer un ID unique pour le rendez-vous
+            const appointmentId = 'rdv_' + Date.now();
+            
+            // Créer l'objet rendez-vous
+            const appointment = {
+                id: appointmentId,
+                ...currentBooking,
+                status: 'confirmed',
+                createdAt: new Date().toISOString(),
+                userId: currentUser.email
+            };
+            
+            // Sauvegarder en localStorage
+            let appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+            appointments.push(appointment);
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            
+            // Afficher la confirmation
+            showConfirmationModal();
+            
+            // Envoyer notification de confirmation
+            sendNotification(
+                '✅ Réservation confirmée!', 
+                `Votre RDV pour "${currentBooking.serviceName}" est confirmé`,
+                { type: 'booking_confirmed', appointmentId: appointmentId }
+            );
+            
+            // Simuler l'envoi SMS
+            setTimeout(() => {
+                showToast('SMS de confirmation envoyé (simulation)');
+            }, 1000);
+
+            // Programmer une notification de rappel (simulation - 10 secondes)
+            setTimeout(() => {
+                sendNotification(
+                    '⏰ Rappel de rendez-vous',
+                    `N'oubliez pas votre RDV demain: ${currentBooking.serviceName}`,
+                    { type: 'appointment', appointmentId: appointmentId }
+                );
+            }, 10000);
+        }
+
+        function showConfirmationModal() {
+            const modal = document.getElementById('confirmationModal');
+            const message = document.getElementById('confirmationMessage');
+            
+            message.innerHTML = `
+                <p><strong>✅ Votre réservation pour "${currentBooking.serviceName}" a été confirmée.</strong></p>
+                <p style="margin-top: 1rem;">
+                    <strong>Numéro de réservation:</strong> RDV${Date.now().toString().slice(-6)}
+                </p>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeConfirmationModal() {
+            document.getElementById('confirmationModal').classList.add('hidden');
+            showHome();
+        }
+
+        function goBackFromBooking() {
+            // Retourner à la page précédente selon le contexte
+            if (currentBooking.serviceId && currentBooking.serviceId.startsWith('teleconsult')) {
+                showCliniqueVirtuelle();
+            } else if (currentBooking.serviceId && (currentBooking.serviceId.includes('salamatek') || currentBooking.serviceId.includes('pack'))) {
+                showSalamatek();
+            } else {
+                showSoinChezVous();
+            }
+        }
+
+        // Gestion des rendez-vous
+        function loadAppointments() {
+            const container = document.getElementById('appointmentsList');
+            const appointments = JSON.parse(localStorage.getItem('appointments') || '[]')
+                .filter(apt => apt.userId === currentUser.email)
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            if (appointments.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: var(--text-light);">
+                        <i class="fas fa-calendar-times" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>Aucun rendez-vous</h3>
+                        <p>Vous n'avez pas encore de rendez-vous planifié.</p>
+                        <button class="btn btn-primary" onclick="showHome()" style="margin-top: 1rem;">
+                            Réserver un service
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = appointments.map(apt => {
+                const appointmentDate = new Date(apt.appointmentDate);
+                const formattedDate = appointmentDate.toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+                const formattedTime = appointmentDate.toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="appointment-card">
+                        <div class="appointment-header">
+                            <h4 style="color: var(--primary-blue);">${apt.serviceName}</h4>
+                            <span class="appointment-status status-confirmed">Confirmé</span>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                            <div>
+                                <strong>Date:</strong> ${formattedDate}<br>
+                                <strong>Heure:</strong> ${formattedTime}
+                            </div>
+                            <div>
+                                <strong>Professionnel:</strong> ${apt.professional?.name || 'À assigner'}<br>
+                                <strong>Téléphone:</strong> ${apt.professional?.phone || 'N/A'}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <strong>Adresse:</strong> ${apt.patientAddress}
+                        </div>
+                        
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: between; align-items: center;">
+                            <span style="font-weight: 600; color: var(--accent-green);">
+                                Prix: ${apt.servicePrice} DA
+                            </span>
+                            <small style="color: var(--text-light);">
+                                SMS envoyé (simulation) • RDV${apt.id.slice(-6)}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Gestion du profil professionnel
+        function loadProfileData() {
+            if (currentUser.role !== 'professional') return;
+            
+            document.getElementById('profileName').value = currentUser.name || '';
+            document.getElementById('profileSpecialty').value = currentUser.specialty || '';
+            document.getElementById('profileQualifications').value = currentUser.qualifications || '';
+            document.getElementById('profileExperience').value = currentUser.experience || '';
+            document.getElementById('profileAvailability').value = currentUser.availability || '';
+            document.getElementById('profilePhone').value = currentUser.phone || '';
+        }
+
+        function handleProfileUpdate(e) {
+            e.preventDefault();
+            
+            // Mettre à jour les données utilisateur
+            currentUser.name = document.getElementById('profileName').value;
+            currentUser.specialty = document.getElementById('profileSpecialty').value;
+            currentUser.qualifications = document.getElementById('profileQualifications').value;
+            currentUser.experience = parseInt(document.getElementById('profileExperience').value);
+            currentUser.availability = document.getElementById('profileAvailability').value;
+            currentUser.phone = document.getElementById('profilePhone').value;
+            
+            // Sauvegarder
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            showToast('Profil mis à jour avec succès');
+        }
+
+        // Utilitaires
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease forwards';
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        function showCustomAlert(message) {
+            // Créer une modal d'alerte personnalisée
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div style="font-size: 2rem; color: #e74c3c; margin-bottom: 1rem;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3 style="color: #e74c3c;">Attention</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="this.closest('.modal').remove()">
+                        OK
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+
+        // Styles pour animations toast supplémentaires
+        const additionalStyle = document.createElement('style');
+        additionalStyle.textContent = `
+            @keyframes slideOutRight {
+                from {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+            }
+        `;
+        document.head.appendChild(additionalStyle);
+    </script>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section footer-logo-section">
+                <div class="footer-logo">
+                    <img src="https://pfst.cf2.poecdn.net/base/image/f0db5b1367a11fd6081f8ef353d199f7f9798ec3304f586ffa6a3531244b32f1?w=1280&amp;h=853" alt="Logo KF Santé">
+                    <span>KF Santé</span>
+                </div>
+                <div class="footer-description">
+                    <span class="footer-heart">♡</span>
+                    <br>
+                    <strong>Soins médicaux et psychologiques à domicile</strong>
+                    <br><br>
+                    KF Santé est une plateforme algérienne de services de santé digitale, regroupant médecins, infirmiers, psychologues et sages-femmes disponibles 24/7 pour votre bien-être.
+                </div>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#" onclick="showHome()">Accueil</a></li>
+                    <li><a href="#" onclick="showSoinChezVous()">Prendre un rendez-vous</a></li>
+                    <li><a href="#">Entreprises</a></li>
+                    <li><a href="#">Recrutement</a></li>
+                    <li><a href="#">Contactez-nous</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h3>Nos coordonnées</h3>
+                <p><i class="fas fa-map-marker-alt"></i> Alger, Algérie</p>
+                <p><i class="fas fa-phone"></i> +213 770 63 30 53</p>
+                <p><i class="fas fa-envelope"></i> contact@kfsante.com</p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="container">
+                <span>Copyright © KF Santé</span>
+                <span>Création site | by KF Santé Team</span>
+            </div>
+        </div>
+    </footer>
+
+
+</body></html>
